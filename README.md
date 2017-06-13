@@ -1,0 +1,1 @@
+# 6.5.17-nerie-en-program-torsk-probl-my-v-jazyku-C
