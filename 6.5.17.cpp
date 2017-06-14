@@ -19,8 +19,23 @@ typedef struct TWN{
 }TWN;
 
 typedef struct{
+	
 	TWN *cur;
 }CTWL;
+
+CTWL *ctwl_create_empty(void){
+	CTWL *l;
+	
+	
+	l=(CTWL*)malloc(sizeof(CTWL));
+	
+	l->cur=(TWN*)malloc(sizeof(TWN));
+	
+	l->cur->next=NULL;
+	l->cur->prev=NULL;
+	
+	return l;
+}
 
 void ctwl_cur_step_right(CTWL *list){
 	list->cur=list->cur->next;
@@ -35,6 +50,13 @@ TWN *ctwl_insert_right(CTWL* list, float val){
 	
 	ins=(TWN*)malloc(sizeof(TWN));
 	ins->data=val;
+	
+	if(list->cur->next==NULL&&list->cur->prev==NULL){
+		list->cur=ins;
+		list->cur->next=ins;
+		list->cur->prev=ins;
+	}
+		
 	curent=list->cur;
 	next=list->cur->next;
 	
@@ -52,6 +74,13 @@ TWN *ctwl_insert_left(CTWL* list, float val){
 	
 	ins=(TWN*)malloc(sizeof(TWN));
 	ins->data=val;
+	
+	if(list->cur->next==NULL&&list->cur->prev==NULL){
+		list->cur=ins;
+		list->cur->next=ins;
+		list->cur->prev=ins;
+	}
+	
 	curent=list->cur;
 	prev=list->cur->prev;
 	
@@ -66,43 +95,41 @@ TWN *ctwl_insert_left(CTWL* list, float val){
 
 char ctwl_delete(CTWL* list){
 	TWN *curent,*next,*prev;
-	char CTWL_OK,CTWL_FAIL;
+	char CTWL_OK=1,CTWL_FAIL=0;
 	
-	if(list->cur->next==NULL)	return CTWL_FAIL;
+	if(list->cur->next==NULL&&list->cur->prev==NULL){
+	return CTWL_FAIL;
+	}
+	
+	else if(list->cur==list->cur->next){
+		free(list->cur);
+		return CTWL_OK;
+	}
 	
 	curent=list->cur;
-	
+
 	next=list->cur->next;
 	prev=list->cur->prev;
-	
+
 	ctwl_cur_step_left(list);
 	list->cur->next=next;
 	ctwl_cur_step_right(list);
 	list->cur->prev=prev;
-	
+
 	free(curent);
 	return CTWL_OK;
-
 	
-}
-
-CTWL *ctwl_create_empty(void){
-	CTWL *l;
-	
-	
-	l=(CTWL*)malloc(sizeof(CTWL));
-	
-	l->cur=(TWN*)malloc(sizeof(TWN));
-	l->cur->next=NULL;
-	l->cur->prev=NULL;
-	
-	return l;
 }
 
 CTWL *ctwl_create_random(unsigned int size){
 	int i;
 	CTWL *list;
 	TWN *begin,*tempprev,*tempnext,*tempcur;
+	
+	if(size==0){
+		list=ctwl_create_empty();
+		return list;
+	}
 	
 	list=ctwl_create_empty();
 	list->cur->data=rand()/(float)(RAND_MAX)* rand_;
@@ -130,42 +157,19 @@ CTWL *ctwl_create_random(unsigned int size){
 }
 
 void ctwl_destroy(CTWL* list){
-	TWN *curent,*prev;
-	int i;
+	TWN *curent;
 	
-	curent=list->cur;
-	ctwl_cur_step_right(list);
+	curent = list->cur;
 		
 	while(curent!=list->cur){
-		prev=list->cur;
+		free(list->cur->prev);
 		ctwl_cur_step_right(list);
-		free(prev);
 	}
 	
+	free(list->cur->prev);
 	free(list->cur);
-}
-
-void ctwl_print(CTWL *list){
-	TWN *cur;
-	int i=2;
+	free(list);
 	
-	if(list->cur==NULL){
-		printf("empty");
-	}
-	else{
-	
-	cur=list->cur;
-	printf("cur :%f \n",list->cur->data);
-
-	ctwl_cur_step_right(list);
-	
-	while(list->cur!=cur){
-		
-		printf("%d %f\n",i,list->cur->data);
-		ctwl_cur_step_right(list);
-		i++;
-	}
-	}
 }
 
 CTWL *ctwl_create_random_unimodal(unsigned int size){
@@ -174,7 +178,17 @@ CTWL *ctwl_create_random_unimodal(unsigned int size){
 	CTWL *list;
 	TWN *begin,*tempprev,*tempnext,*tempcur;
 	
-	if(size==2){
+	if(size==0){
+		list=ctwl_create_empty();
+		return list;
+	}
+	else if(size==1){
+		list=ctwl_create_empty();	
+		list->cur->data=rand()/(float)(RAND_MAX)*10;
+		list->cur->next=list->cur;
+		list->cur->prev=list->cur;
+	}
+	else if(size==2){
 		list=ctwl_create_empty();
 		list->cur->data=rand()/(float)(RAND_MAX)*10;
 		tempcur=list->cur;
@@ -228,25 +242,42 @@ CTWL *ctwl_create_random_unimodal(unsigned int size){
 		ctwl_cur_step_right(list);
 		list->cur->prev=tempprev;
 	}
-	return list;
+	return list;	
+}
+
+void ctwl_print(CTWL *list){
+	TWN *cur;
+	int i=2;
 	
+	if(list->cur->next==NULL&&list->cur->prev==NULL){	
+		printf("empty");
+	}
+	else{
+
+		cur=list->cur;
+		printf("cur :%f \n",list->cur->data);
+
+		ctwl_cur_step_right(list);
+	
+		while(list->cur!=cur){
+		
+			printf("%d %f\n",i,list->cur->data);
+			ctwl_cur_step_right(list);
+			i++;
+		}
+	}
 }
 
 main(){
 	unsigned int x;
 	CTWL l;
 	CTWL *zoznam;
+	char ctwl;
 	
 	srand(time(NULL));
 	printf("zadaj dlzku zoznamu: ");
 	scanf("%d",&x);
 
 	zoznam=ctwl_create_random_unimodal(x);
-//	zoznam=ctwl_create_random(x);
 	ctwl_print(zoznam);
-
-	ctwl_insert_left(zoznam,500);
-	ctwl_print(zoznam);
-
-
 }
