@@ -24,15 +24,10 @@ typedef struct{
 }CTWL;
 
 CTWL *ctwl_create_empty(void){
-	CTWL *l;
-	
+	CTWL *l;	
 	
 	l=(CTWL*)malloc(sizeof(CTWL));
-	
-	l->cur=(TWN*)malloc(sizeof(TWN));
-	
-	l->cur->next=NULL;
-	l->cur->prev=NULL;
+	l->cur=NULL;
 	
 	return l;
 }
@@ -51,12 +46,12 @@ TWN *ctwl_insert_right(CTWL* list, float val){
 	ins=(TWN*)malloc(sizeof(TWN));
 	ins->data=val;
 	
-	if(list->cur->next==NULL&&list->cur->prev==NULL){
+	if(list->cur==NULL){
 		list->cur=ins;
 		list->cur->next=ins;
 		list->cur->prev=ins;
 	}
-		
+	
 	curent=list->cur;
 	next=list->cur->next;
 	
@@ -97,28 +92,28 @@ char ctwl_delete(CTWL* list){
 	TWN *curent,*next,*prev;
 	char CTWL_OK=1,CTWL_FAIL=0;
 	
-	if(list->cur->next==NULL&&list->cur->prev==NULL){
+	if(list->cur==NULL){
 	return CTWL_FAIL;
 	}
 	
 	else if(list->cur==list->cur->next){
-		free(list->cur);
+		list->cur=NULL;
 		return CTWL_OK;
 	}
-	
-	curent=list->cur;
+	else{	
+		curent=list->cur;
 
-	next=list->cur->next;
-	prev=list->cur->prev;
+		next=list->cur->next;
+		prev=list->cur->prev;
 
-	ctwl_cur_step_left(list);
-	list->cur->next=next;
-	ctwl_cur_step_right(list);
-	list->cur->prev=prev;
+		ctwl_cur_step_left(list);
+		list->cur->next=next;
+		ctwl_cur_step_right(list);
+		list->cur->prev=prev;
 
-	free(curent);
-	return CTWL_OK;
-	
+		free(curent);
+		return CTWL_OK;
+	}
 }
 
 CTWL *ctwl_create_random(unsigned int size){
@@ -132,20 +127,15 @@ CTWL *ctwl_create_random(unsigned int size){
 	}
 	
 	list=ctwl_create_empty();
+	list->cur=(TWN*)malloc(sizeof(TWN));
 	list->cur->data=rand()/(float)(RAND_MAX)* rand_;
 	begin=list->cur;
 
 
 	for(i=0;i<size-1;i++){
 		list->cur->next=(TWN*)malloc(sizeof(TWN));
-		if(list->cur->next==NULL) return NULL;
 		
-
-		tempprev=list->cur;
-		ctwl_cur_step_right(list);
-		list->cur->prev=tempprev;
-		
-		list->cur->data=rand()/(float)(RAND_MAX)*rand_;		
+		ctwl_insert_right(list,rand()/(float)(RAND_MAX)*rand_);		
 	}	
 	
 	tempprev=list->cur;
@@ -159,17 +149,21 @@ CTWL *ctwl_create_random(unsigned int size){
 void ctwl_destroy(CTWL* list){
 	TWN *curent;
 	
-	curent = list->cur;
-		
-	while(curent!=list->cur){
-		free(list->cur->prev);
-		ctwl_cur_step_right(list);
+	if(list->cur==list->cur->next){
+		free(list->cur);
 	}
+	else{
+		curent = list->cur;
+		
+		while(curent!=list->cur){
+			free(list->cur->prev);
+			ctwl_cur_step_right(list);
+		}
 	
-	free(list->cur->prev);
-	free(list->cur);
-	free(list);
-	
+		free(list->cur->prev);
+		free(list->cur);
+		free(list);
+	}
 }
 
 CTWL *ctwl_create_random_unimodal(unsigned int size){
@@ -183,13 +177,15 @@ CTWL *ctwl_create_random_unimodal(unsigned int size){
 		return list;
 	}
 	else if(size==1){
-		list=ctwl_create_empty();	
+		list=ctwl_create_empty();
+		list->cur=(TWN*)malloc(sizeof(TWN));	
 		list->cur->data=rand()/(float)(RAND_MAX)*10;
 		list->cur->next=list->cur;
 		list->cur->prev=list->cur;
 	}
 	else if(size==2){
 		list=ctwl_create_empty();
+		list->cur=(TWN*)malloc(sizeof(TWN));
 		list->cur->data=rand()/(float)(RAND_MAX)*10;
 		tempcur=list->cur;
 		list->cur->next=(TWN*)malloc(sizeof(TWN));
@@ -200,10 +196,8 @@ CTWL *ctwl_create_random_unimodal(unsigned int size){
 		list->cur->data=rand()/(float)(RAND_MAX)*10;
 	}
 	else{
-		rand_min=rand()%(size-1)+1;
-		while(rand_min==1){
-			rand_min=rand()%(size-1)+1;
-		}
+		rand_min=rand()%(size-2)+2;
+	
 		
 		if(rand_min!=2){
 			rand_range_min=50/(float)(rand_min-2);
@@ -212,27 +206,23 @@ CTWL *ctwl_create_random_unimodal(unsigned int size){
 		rand_range_max=50/(float)(size-rand_min);
 	
 		list=ctwl_create_empty();
+		list->cur=(TWN*)malloc(sizeof(TWN));
 		list->cur->data=rand()/(float)(RAND_MAX)*10+50;
 		begin=list->cur;
 
 		for(i=0;i<size-1;i++){
 			list->cur->next=(TWN*)malloc(sizeof(TWN));
-			if(list->cur->next==NULL) return NULL;	
-
-			tempprev=list->cur;
-			ctwl_cur_step_right(list);
-			list->cur->prev=tempprev;	
 		
 			if(i+2<rand_min){
-				list->cur->data=rand()/(float)(RAND_MAX)*rand_range_min+(50-(i+1)*rand_range_min);
+				ctwl_insert_right(list,rand()/(float)(RAND_MAX)*rand_range_min+(50-(i+1)*rand_range_min));
 			}
 		
 			else if(i+2==rand_min){
-				list->cur->data=rand()/(float)(RAND_MAX)*10-10;
+				ctwl_insert_right(list,rand()/(float)(RAND_MAX)*10-10);
 			}
 			
 			else if(i+2>rand_min){
-				list->cur->data=rand()/(float)(RAND_MAX)*rand_range_max+j*rand_range_max;
+				ctwl_insert_right(list,rand()/(float)(RAND_MAX)*rand_range_max+j*rand_range_max);
 				j++;
 			}		
 		}
@@ -249,7 +239,7 @@ void ctwl_print(CTWL *list){
 	TWN *cur;
 	int i=2;
 	
-	if(list->cur->next==NULL&&list->cur->prev==NULL){	
+	if(list->cur==NULL){	
 		printf("empty");
 	}
 	else{
