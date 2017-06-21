@@ -10,6 +10,8 @@
 #include <sys/stat.h>
 
 #define rand_ 100
+#define CTWL_OK 1
+#define CTWL_FAIL 0;
 
 
 typedef struct TWN{
@@ -90,7 +92,6 @@ TWN *ctwl_insert_left(CTWL* list, float val){
 
 char ctwl_delete(CTWL* list){
 	TWN *curent,*next,*prev;
-	char CTWL_OK=1,CTWL_FAIL=0;
 	
 	if(list->cur==NULL){
 	return CTWL_FAIL;
@@ -98,6 +99,7 @@ char ctwl_delete(CTWL* list){
 	
 	else if(list->cur==list->cur->next){
 		list->cur=NULL;
+		free(list->cur);
 		return CTWL_OK;
 	}
 	else{	
@@ -149,15 +151,16 @@ CTWL *ctwl_create_random(unsigned int size){
 void ctwl_destroy(CTWL* list){
 	TWN *curent;
 	
-	if(list->cur==list->cur->next){
+	if(list->cur->next==NULL&&list->cur->prev==NULL){
 		free(list->cur);
 	}
 	else{
 		curent = list->cur;
-		
+		ctwl_cur_step_right(list);
 		while(curent!=list->cur){
-			free(list->cur->prev);
 			ctwl_cur_step_right(list);
+			free(list->cur->prev);
+			
 		}
 	
 		free(list->cur->prev);
@@ -196,14 +199,14 @@ CTWL *ctwl_create_random_unimodal(unsigned int size){
 		list->cur->data=rand()/(float)(RAND_MAX)*10;
 	}
 	else{
-		rand_min=rand()%(size-2)+2;
+		rand_min=rand()%(size-2)+2;								//vygeneruje poziciu na ktorej bude min a pocitame a dalej budeme generovat tak že na zaciatku generuje max
 	
 		
 		if(rand_min!=2){
 			rand_range_min=50/(float)(rand_min-2);
-		}
-	
-		rand_range_max=50/(float)(size-rand_min);
+		}											//pokial by bolo min na druhom mieste tak by sme delili nulovu preto by to moholo robit problemy a v takom prípade tento krok ani nieje dôležitý
+													// v prípade kedy je size vaèsie ako 2 rozdelíme cisla od 0 po 50 na pocet cisel nachadzajucich sa medzi maximom(na zaciatku) a minimom (na nahodne vygenerovanej pozicii)
+		rand_range_max=50/(float)(size-rand_min);	//tak isto musime rozdelit cislaod 0 po 50 na taký pocet èastí kolko je poèet prvkov rastúcih od minima k maximu
 	
 		list=ctwl_create_empty();
 		list->cur=(TWN*)malloc(sizeof(TWN));
@@ -214,23 +217,23 @@ CTWL *ctwl_create_random_unimodal(unsigned int size){
 			list->cur->next=(TWN*)malloc(sizeof(TWN));
 		
 			if(i+2<rand_min){
-				ctwl_insert_right(list,rand()/(float)(RAND_MAX)*rand_range_min+(50-(i+1)*rand_range_min));
+				ctwl_insert_right(list,rand()/(float)(RAND_MAX)*rand_range_min+(50-(i+1)*rand_range_min));			//v tejto podmienke sa generuju cisla ktore klesaju
 			}
 		
 			else if(i+2==rand_min){
-				ctwl_insert_right(list,rand()/(float)(RAND_MAX)*10-10);
+				ctwl_insert_right(list,rand()/(float)(RAND_MAX)*10-10);												//v tejto podmienke sa vygeneruje minimum7
 			}
 			
 			else if(i+2>rand_min){
 				ctwl_insert_right(list,rand()/(float)(RAND_MAX)*rand_range_max+j*rand_range_max);
-				j++;
+				j++;																								//v tejto podmienke sa generuju cisla ktore rastu 
 			}		
 		}
 		
 		tempprev=list->cur;
 		list->cur->next=begin;
 		ctwl_cur_step_right(list);
-		list->cur->prev=tempprev;
+		list->cur->prev=tempprev;																					//nakoniec prepojíme zciatok a koniec
 	}
 	return list;	
 }
