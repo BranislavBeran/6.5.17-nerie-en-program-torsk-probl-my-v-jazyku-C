@@ -72,7 +72,7 @@ TWN *ctwl_insert_left(CTWL* list, float val){
 	ins=(TWN*)malloc(sizeof(TWN));
 	ins->data=val;
 	
-	if(list->cur->next==NULL&&list->cur->prev==NULL){
+	if(list->cur==NULL){
 		list->cur=ins;
 		list->cur->next=ins;
 		list->cur->prev=ins;
@@ -98,8 +98,9 @@ char ctwl_delete(CTWL* list){
 	}
 	
 	else if(list->cur==list->cur->next){
-		list->cur=NULL;
 		free(list->cur);
+		list->cur=NULL;
+			
 		return CTWL_OK;
 	}
 	else{	
@@ -268,9 +269,11 @@ main(){
 	char ctwl;
 	
 	srand(time(NULL));
-	printf("zadaj dlzku zoznamu: ");
-	scanf("%d",&x);
+	 zoznam = ctwl_create_empty();
 
-	zoznam=ctwl_create_random_unimodal(x);
-	ctwl_print(zoznam);
+    ctwl_insert_left(zoznam, 1);
+
+    ctwl_delete(zoznam);
+
+    printf("Ahoj, tuto hlasku program nikdy nevypise\n");
 }
